@@ -1,11 +1,24 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ShoppingCart } from "lucide-react"
-import Image from "next/image"
+"use client"
 
-// Mock data for featured products
-const featuredProducts = [
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ShoppingCart } from "lucide-react";
+import Image from "next/image";
+import { useCart } from "@/components/cart-provider";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  mood: string;
+  description: string;
+}
+
+const featuredProducts: Product[] = [
   {
     id: 1,
     name: "Calming Tea Set",
@@ -38,15 +51,39 @@ const featuredProducts = [
     mood: "Happy",
     description: "A curated box of treats to celebrate good moments.",
   },
-]
+];
 
 export function FeaturedProducts() {
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+  const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>({});
+
+  const handleAddToCart = (product: Product) => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+    });
+
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart.`,
+    });
+  };
+
+  const handleImageError = (id: number) => {
+    setImageErrors((prev) => ({ ...prev, [id]: true }));
+  };
+
   return (
     <section className="w-full py-12 bg-gray-50 dark:bg-gray-900">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center space-y-4 text-center">
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Featured Products</h2>
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+              Featured Products
+            </h2>
             <p className="max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
               Discover our most popular mood-enhancing products
             </p>
@@ -57,7 +94,15 @@ export function FeaturedProducts() {
             <Card key={product.id} className="overflow-hidden">
               <CardHeader className="p-0">
                 <div className="relative h-48 w-full">
-                  <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
+                  <Image
+                    src={imageErrors[product.id] ? "/placeholder.svg?height=200&width=200" : product.image}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    onError={() => handleImageError(product.id)}
+                    loading="lazy"
+                    priority={false}
+                  />
                 </div>
               </CardHeader>
               <CardContent className="p-4">
@@ -71,7 +116,7 @@ export function FeaturedProducts() {
                 <p className="font-bold">${product.price.toFixed(2)}</p>
               </CardContent>
               <CardFooter className="p-4 pt-0">
-                <Button className="w-full">
+                <Button className="w-full" onClick={() => handleAddToCart(product)} aria-label={`Add ${product.name} to cart`}>
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   Add to Cart
                 </Button>
@@ -81,6 +126,5 @@ export function FeaturedProducts() {
         </div>
       </div>
     </section>
-  )
+  );
 }
-
