@@ -26,11 +26,12 @@ export async function POST(req: Request) {
 
   // Stream the response
   const stream = streamText({
-    model: openai("gpt-4o"),
+    model: openai("gpt-4o", {
+      apiKey: process.env.OPENAI_API_KEY, // Use environment variable
+    }),
     system: systemPrompt,
     prompt: lastMessage.content,
   })
 
   return new StreamingTextResponse(stream.toReadableStream())
 }
-
